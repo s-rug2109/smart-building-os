@@ -2,26 +2,9 @@ import { create } from 'zustand';
 import axios from 'axios';
 import type { TopologyItem, PointData, TimeSeriesData, Alert, AlertConfig } from './types';
 
-// Environment variables with fallback
-const REST_URL = import.meta.env.VITE_API_REST_URL || 'https://dq7i2u9882.execute-api.ap-northeast-1.amazonaws.com/v1';
-const WS_URL = import.meta.env.VITE_API_WS_URL || 'wss://373x5ueep5.execute-api.ap-northeast-1.amazonaws.com/v1';
-
-// Mock data for demo when API is not available
-const MOCK_TOPOLOGY = [
-  { point_id: '817a4762-8844-4457-a0dc-4452c7f319dc', entity_id: 'room_202', entity_name: '事務室202', component_type_id: 'Space', parent_id: 'd76d620f-d07e-4d4f-8b79-6771ee021157' },
-  { point_id: '2cd7cd24-b4ec-4634-a069-67a01f94aad0', entity_id: 'room_201', entity_name: '会議室201', component_type_id: 'Space', parent_id: 'd76d620f-d07e-4d4f-8b79-6771ee021157' },
-  { point_id: '8e7f52d7-4f0e-42f3-94a4-3eb3aebb390a', entity_id: 'room_203', entity_name: '会議室203', component_type_id: 'Space', parent_id: 'd76d620f-d07e-4d4f-8b79-6771ee021157' },
-  { point_id: '65d732de-6643-410a-ac19-d20ba876a521', entity_id: 'room_204', entity_name: '廊下', component_type_id: 'Space', parent_id: 'd76d620f-d07e-4d4f-8b79-6771ee021157' },
-  
-  // Equipment for room_202
-  { point_id: '2432315a-c47b-441b-9c6a-a01917fae4a6', entity_id: 'sensor_202_01', entity_name: '温度センサー202-1', component_type_id: 'dtmi_sbco_equipment_EnvironmentalSensor_ENV_MULTI_01_1', parent_id: '817a4762-8844-4457-a0dc-4452c7f319dc' },
-  { point_id: '55e0e2f8-a9b2-42ee-902f-5e8d2db84677', entity_id: 'light_202_01', entity_name: 'LED照明202-1', component_type_id: 'dtmi_sbco_equipment_LightingFixture_LED_DL_20W_1', parent_id: '817a4762-8844-4457-a0dc-4452c7f319dc' },
-  { point_id: '7bd0e097-d47d-4a33-addb-0f3202e65919', entity_id: 'hvac_202_01', entity_name: 'エアコン202-1', component_type_id: 'dtmi_sbco_equipment_PackageAirConditioner_PAC_56GV_1', parent_id: '817a4762-8844-4457-a0dc-4452c7f319dc' },
-  
-  // Equipment for room_201
-  { point_id: 'e6f15178-44fd-4ec2-911d-c98afee5e842', entity_id: 'sensor_201_01', entity_name: '温度センサー201-1', component_type_id: 'dtmi_sbco_equipment_EnvironmentalSensor_TEMP_ONLY_01_1', parent_id: '2cd7cd24-b4ec-4634-a069-67a01f94aad0' },
-  { point_id: '5d69972e-5670-471e-b134-ab142d2df606', entity_id: 'light_201_01', entity_name: 'LED照明201-1', component_type_id: 'dtmi_sbco_equipment_LightingFixture_LED_PNL_40W_1', parent_id: '2cd7cd24-b4ec-4634-a069-67a01f94aad0' }
-];
+// Environment variables
+const REST_URL = import.meta.env.VITE_API_REST_URL;
+const WS_URL = import.meta.env.VITE_API_WS_URL;
 
 interface AppState {
   topology: TopologyItem[];
@@ -31,7 +14,6 @@ interface AppState {
   alertConfigs: Record<string, AlertConfig>;
   ws: WebSocket | null;
   isConnected: boolean;
-  isUsingMockData: boolean;
 
   fetchTopology: () => Promise<void>;
   connectWebSocket: () => void;
@@ -50,53 +32,42 @@ export const useStore = create<AppState>((set, get) => ({
   timeSeriesData: {},
   alerts: [],
   alertConfigs: {
-    '2432315a-c47b-441b-9c6a-a01917fae4a6': { point_id: '2432315a-c47b-441b-9c6a-a01917fae4a6', min_threshold: 18, max_threshold: 28, enabled: true },
-    'e6f15178-44fd-4ec2-911d-c98afee5e842': { point_id: 'e6f15178-44fd-4ec2-911d-c98afee5e842', min_threshold: 18, max_threshold: 28, enabled: true }
+    '3': { point_id: '3', min_threshold: 18, max_threshold: 28, enabled: true },
+    '4': { point_id: '4', min_threshold: 0, max_threshold: 100, enabled: true }
   },
   ws: null,
   isConnected: false,
-  isUsingMockData: false,
 
-  // 1. Fetch topology with CORS handling
+  // 1. Fetch topology
   fetchTopology: async () => {
     try {
       console.log('Fetching topology...');
       console.log('REST_URL:', REST_URL);
-      
       const res = await axios.post(`${REST_URL}/digital-twin/search`, {
         query_type: 'topology',
         depth: 'Equipment'
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        timeout: 10000
       });
-      
       console.log('Topology Response:', res.data);
       console.log('Items count:', res.data.items?.length || 0);
-      
-      if (res.data.items && res.data.items.length > 0) {
-        console.log('First item:', res.data.items[0]);
-        console.log('Component types:', res.data.items.map((item: any) => item.component_type_id).filter((v: any, i: number, a: any[]) => a.indexOf(v) === i));
-        set({ topology: res.data.items, isUsingMockData: false });
-      } else {
-        throw new Error('No topology data received');
-      }
+      console.log('First item:', res.data.items?.[0]);
+      console.log('Component types:', res.data.items?.map((item: any) => item.component_type_id).filter((v: any, i: number, a: any[]) => a.indexOf(v) === i));
+      set({ topology: res.data.items || [] });
     } catch (e: any) {
-      console.error('Failed to fetch topology:', e.message);
+      console.error('Failed to fetch topology:', e);
       console.error('Error details:', e.response?.data);
-      console.log('Using mock data for demo (CORS or network issue)');
-      
-      set({ 
-        topology: MOCK_TOPOLOGY,
-        isUsingMockData: true
-      });
+      // Set mock data for demo purposes when API fails
+      const mockData = [
+        { point_id: '1', entity_id: 'room_101', entity_name: 'Demo Room 101', component_type_id: 'Space', parent_id: 'building_1' },
+        { point_id: '2', entity_id: 'room_102', entity_name: 'Demo Room 102', component_type_id: 'Space', parent_id: 'building_1' },
+        { point_id: '3', entity_id: 'sensor_001', entity_name: 'Temperature Sensor', component_type_id: 'dtmi_sbco_equipment_EnvironmentalSensor_TEMP_ONLY_01_1', parent_id: '1' },
+        { point_id: '4', entity_id: 'light_001', entity_name: 'LED Light', component_type_id: 'dtmi_sbco_equipment_LightingFixture_LED_PNL_40W_1', parent_id: '1' }
+      ];
+      set({ topology: mockData });
+      console.log('Using mock data for demo');
     }
   },
 
-  // 2. WebSocket connection with fallback
+  // 2. WebSocket connection
   connectWebSocket: () => {
     if (get().ws) return;
     
@@ -136,50 +107,18 @@ export const useStore = create<AppState>((set, get) => ({
       socket.onerror = (error) => {
         console.error('WebSocket error:', error);
         set({ isConnected: false });
-        
-        // Simulate connection for demo when WebSocket fails
-        setTimeout(() => {
-          console.log('Simulating WebSocket connection for demo');
-          set({ isConnected: true });
-        }, 2000);
       };
 
       set({ ws: socket });
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       set({ isConnected: false });
-      
-      // Simulate connection for demo
-      setTimeout(() => {
-        console.log('Simulating WebSocket connection for demo');
-        set({ isConnected: true });
-      }, 2000);
     }
   },
 
   // 3. Subscribe request
   subscribePoints: (pointIds: string[]) => {
-    const { ws, isConnected, isUsingMockData } = get();
-    
-    if (isUsingMockData) {
-      // Generate mock data for demo
-      pointIds.forEach(pointId => {
-        const mockValue = Math.floor(Math.random() * 30 + 20);
-        set(state => ({
-          values: {
-            ...state.values,
-            [pointId]: {
-              point_id: pointId,
-              value: mockValue.toString(),
-              timestamp: new Date().toISOString(),
-              quality: 'GOOD'
-            }
-          }
-        }));
-      });
-      return;
-    }
-    
+    const { ws, isConnected } = get();
     if (ws && isConnected && pointIds.length > 0) {
       ws.send(JSON.stringify({
         action: 'subscribe_points',
@@ -191,10 +130,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // 4. Unsubscribe request
   unsubscribePoints: (pointIds: string[]) => {
-    const { ws, isConnected, isUsingMockData } = get();
-    
-    if (isUsingMockData) return;
-    
+    const { ws, isConnected } = get();
     if (ws && isConnected && pointIds.length > 0) {
       ws.send(JSON.stringify({
         action: 'unsubscribe_points',
@@ -211,7 +147,7 @@ export const useStore = create<AppState>((set, get) => ({
     
     for (let i = 23; i >= 0; i--) {
       const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000);
-      const baseValue = pointId.includes('sensor') ? 22 : 50;
+      const baseValue = pointId === '3' ? 22 : 50;
       const value = baseValue + Math.sin(i * 0.5) * 5 + (Math.random() - 0.5) * 3;
       
       data.push({
