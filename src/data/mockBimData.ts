@@ -131,17 +131,17 @@ export const mockBimData: BimBuilding = {
   }
 };
 
-// AWS TwinMakerデータとBIMデータのマッピング
+// AWS TwinMakerデータとBIMデータのマッピング（全部屋対応）
 export const mapTwinMakerToBim = (topology: any[]) => {
   const mapping: { [key: string]: string } = {};
   
   // 実際のTwinMakerエンティティIDと仮想BIMルームIDをマッピング
   const rooms = topology.filter(t => t.component_type_id === 'Space');
-  const bimRooms = mockBimData.floors[1]; // 2階のデータ
+  const allBimRooms = mockBimData.floors.flat();
   
   rooms.forEach((room, index) => {
-    if (index < bimRooms.length) {
-      mapping[room.point_id] = bimRooms[index].id;
+    if (index < allBimRooms.length) {
+      mapping[room.point_id] = allBimRooms[index].id;
     }
   });
   

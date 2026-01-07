@@ -100,7 +100,7 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
     // Create BIM-based building
     createBimBuilding(scene);
 
-    // Mouse controls
+    // Mouse controls with zoom
     let mouseDown = false;
     let mouseX = 0;
     let mouseY = 0;
@@ -134,9 +134,24 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
       mouseY = event.clientY;
     };
 
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const zoomSpeed = 0.1;
+      const direction = event.deltaY > 0 ? 1 : -1;
+      
+      const spherical = new THREE.Spherical();
+      spherical.setFromVector3(camera.position);
+      spherical.radius += direction * zoomSpeed * spherical.radius * 0.1;
+      spherical.radius = Math.max(5, Math.min(100, spherical.radius));
+      
+      camera.position.setFromSpherical(spherical);
+      camera.lookAt(7, 0, 4);
+    };
+
     renderer.domElement.addEventListener('mousedown', onMouseDown);
     renderer.domElement.addEventListener('mouseup', onMouseUp);
     renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -158,6 +173,7 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('mouseup', onMouseUp);
       renderer.domElement.removeEventListener('mousemove', onMouseMove);
+      renderer.domElement.removeEventListener('wheel', onWheel);
       
       scene.traverse((object) => {
         if ((object as THREE.Mesh).material) {
@@ -189,9 +205,9 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
     // Create mapping between TwinMaker and BIM data
     const mapping = mapTwinMakerToBim(topology);
     
-    // Create 2nd floor rooms from BIM data
-    const floor2Rooms = mockBimData.floors[1];
-    floor2Rooms.forEach(room => {
+    // Create all rooms from BIM data (all floors)
+    const allRooms = mockBimData.floors.flat();
+    allRooms.forEach(room => {
       createBimRoom(scene, room, mapping);
     });
   };
@@ -400,6 +416,7 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
           <Chip size="small" label="🤝 Meeting" sx={{ bgcolor: 'rgba(155,89,182,0.2)', color: '#9B59B6', fontSize: '0.7rem' }} />
           <Chip size="small" label="🚶 Corridor" sx={{ bgcolor: 'rgba(149,165,166,0.2)', color: '#95A5A6', fontSize: '0.7rem' }} />
           <Chip size="small" label="🖱️ Drag to rotate" sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }} />
+          <Chip size="small" label="🔍 Scroll to zoom" sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }} />
         </Box>
       </CardContent>
     </Card>
