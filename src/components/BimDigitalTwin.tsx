@@ -42,7 +42,7 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  const { topology, values } = useStore();
+  const { topology } = useStore();
 
   useEffect(() => {
     if (!mountRef.current || topology.length === 0) return;

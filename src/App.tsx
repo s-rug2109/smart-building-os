@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
 import { 
-  Grid, Box, AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemText, 
-  Card, CardContent, Container, Chip, Paper, LinearProgress, Dialog, DialogTitle, DialogContent, IconButton, Tab, Tabs
+  Box, AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemText, 
+  Card, CardContent, Container, Chip, Paper, LinearProgress, Dialog, DialogTitle, DialogContent, IconButton
 } from '@mui/material';
 import { 
   Sensors, Lightbulb, AcUnit, Dashboard, TrendingUp, Timeline, Notifications, Close, Info

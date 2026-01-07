@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
-  Box, Typography, Card, CardContent, Grid, Chip, List, ListItem, 
+  Box, Typography, Card, CardContent, Chip, List, ListItem, 
   ListItemText, Accordion, AccordionSummary, AccordionDetails, Button
 } from '@mui/material';
-import { ExpandMore, GitHub, Cloud, Code, Timeline } from '@mui/icons-material';
+import { ExpandMore, Cloud, Code, Timeline } from '@mui/icons-material';
 
 interface ProjectStatus {
   lastUpdated: string;
@@ -96,9 +96,9 @@ export default function DevStatusDashboard() {
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {/* Project Overview */}
-        <Grid item xs={12} md={6}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
           <Card sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <CardContent>
               <Typography variant="h5" sx={{ color: '#00E676', mb: 2 }}>
@@ -115,10 +115,8 @@ export default function DevStatusDashboard() {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
 
         {/* Tech Stack */}
-        <Grid item xs={12} md={6}>
           <Card sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <CardContent>
               <Typography variant="h5" sx={{ color: '#42A5F5', mb: 2 }}>
@@ -137,10 +135,9 @@ export default function DevStatusDashboard() {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Features Status */}
-        <Grid item xs={12}>
           <Accordion sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <AccordionSummary expandIcon={<ExpandMore sx={{ color: 'white' }} />}>
               <Typography variant="h5" sx={{ color: '#FFD54F' }}>
@@ -175,10 +172,8 @@ export default function DevStatusDashboard() {
               </List>
             </AccordionDetails>
           </Accordion>
-        </Grid>
 
         {/* AWS Services */}
-        <Grid item xs={12}>
           <Accordion sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <AccordionSummary expandIcon={<ExpandMore sx={{ color: 'white' }} />}>
               <Typography variant="h5" sx={{ color: '#ff9800' }}>
@@ -214,10 +209,8 @@ export default function DevStatusDashboard() {
               </List>
             </AccordionDetails>
           </Accordion>
-        </Grid>
 
         {/* Next Steps */}
-        <Grid item xs={12}>
           <Card sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <CardContent>
               <Typography variant="h5" sx={{ color: '#9C27B0', mb: 2 }}>
@@ -239,8 +232,7 @@ export default function DevStatusDashboard() {
               </List>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+      </Box>
     </Box>
   );
 }
