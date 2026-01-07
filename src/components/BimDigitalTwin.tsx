@@ -33,14 +33,16 @@ interface BimRoom {
 
 interface BimDigitalTwinProps {
   selectedRoomId: string | null;
+  selectedEquipmentId: string | null;
 }
 
-export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) {
+export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: BimDigitalTwinProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [cameraPosition, setCameraPosition] = useState({ x: 20, y: 25, z: 20 });
   
   const { topology } = useStore();
 
@@ -57,14 +59,14 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
     scene.background = new THREE.Color(0x0a0a0a);
     sceneRef.current = scene;
 
-    // Camera setup
+    // Camera setup with saved position
     const camera = new THREE.PerspectiveCamera(
       75,
       mountRef.current.clientWidth / mountRef.current.clientHeight,
       0.1,
       1000
     );
-    camera.position.set(20, 25, 20);
+    camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
     camera.lookAt(7, 0, 4);
     cameraRef.current = camera;
 
@@ -130,6 +132,9 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
       camera.position.setFromSpherical(spherical);
       camera.lookAt(7, 0, 4);
       
+      // Save camera position
+      setCameraPosition({ x: camera.position.x, y: camera.position.y, z: camera.position.z });
+      
       mouseX = event.clientX;
       mouseY = event.clientY;
     };
@@ -146,6 +151,9 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
       
       camera.position.setFromSpherical(spherical);
       camera.lookAt(7, 0, 4);
+      
+      // Save camera position
+      setCameraPosition({ x: camera.position.x, y: camera.position.y, z: camera.position.z });
     };
 
     renderer.domElement.addEventListener('mousedown', onMouseDown);
@@ -191,7 +199,48 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
       
       renderer.dispose();
     };
-  }, [topology, selectedRoomId]);
+  }, [topology, selectedRoomId, cameraPosition]);
+
+  // Separate effect for equipment selection only
+  useEffect(() => {
+    if (!sceneRef.current || !selectedEquipmentId) return;
+    
+    // Update only equipment highlighting
+    sceneRef.current.traverse((object) => {
+      if (object.userData.type === 'equipment') {
+        const mesh = object as THREE.Mesh;
+        const material = mesh.material as THREE.MeshLambertMaterial;
+        
+        // Check if this equipment should be highlighted
+        const shouldHighlight = topology.some(t => 
+          t.point_id === selectedEquipmentId && 
+          object.userData.roomId && 
+          mapTwinMakerToBim(topology)[t.parent_id || ''] === object.userData.roomId
+        );
+        
+        // Update color based on equipment type and selection
+        let newColor = 0x888888;
+        switch (object.userData.equipmentType) {
+          case 'sensor':
+            newColor = shouldHighlight ? 0xffff00 : 0x00e676;
+            break;
+          case 'lighting':
+            newColor = shouldHighlight ? 0xffff00 : 0xffd54f;
+            break;
+          case 'hvac':
+            newColor = shouldHighlight ? 0xffff00 : 0x42a5f5;
+            break;
+          case 'camera':
+            newColor = shouldHighlight ? 0xffff00 : 0xff6b6b;
+            break;
+          default:
+            newColor = shouldHighlight ? 0xffff00 : 0x888888;
+        }
+        
+        material.color.setHex(newColor);
+      }
+    });
+  }, [selectedEquipmentId, topology]);
 
   const createBimBuilding = (scene: THREE.Scene) => {
     // Ground plane
@@ -322,30 +371,38 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
     let geometry: THREE.BufferGeometry;
     let color = 0x888888;
     
+    const isSelected = selectedEquipmentId && topology.some(t => 
+      t.point_id === selectedEquipmentId && t.parent_id === Object.keys(mapTwinMakerToBim(topology)).find(key => 
+        mapTwinMakerToBim(topology)[key] === room.id
+      )
+    );
+    
     // Equipment type and geometry
     switch (equipment.type) {
       case 'sensor':
         geometry = new THREE.SphereGeometry(0.1, 12, 12);
-        color = 0x00e676;
+        color = isSelected ? 0xffff00 : 0x00e676;
         break;
       case 'lighting':
         geometry = new THREE.CylinderGeometry(0.05, 0.1, 0.2, 8);
-        color = 0xffd54f;
+        color = isSelected ? 0xffff00 : 0xffd54f;
         break;
       case 'hvac':
         geometry = new THREE.BoxGeometry(0.4, 0.3, 0.4);
-        color = 0x42a5f5;
+        color = isSelected ? 0xffff00 : 0x42a5f5;
         break;
       case 'camera':
         geometry = new THREE.ConeGeometry(0.08, 0.15, 8);
-        color = 0xff6b6b;
+        color = isSelected ? 0xffff00 : 0xff6b6b;
         break;
       default:
         geometry = new THREE.OctahedronGeometry(0.08);
+        color = isSelected ? 0xffff00 : 0x888888;
     }
     
     const material = new THREE.MeshLambertMaterial({ color });
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData = { type: 'equipment', equipmentType: equipment.type, roomId: room.id };
     
     mesh.position.set(
       room.coordinates.x + equipment.position.x,
@@ -355,6 +412,20 @@ export default function BimDigitalTwin({ selectedRoomId }: BimDigitalTwinProps) 
     
     mesh.castShadow = true;
     scene.add(mesh);
+    
+    // Add glow effect for selected equipment
+    if (isSelected) {
+      const glowGeometry = geometry.clone();
+      const glowMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffff00, 
+        transparent: true, 
+        opacity: 0.3 
+      });
+      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+      glowMesh.scale.setScalar(1.5);
+      glowMesh.position.copy(mesh.position);
+      scene.add(glowMesh);
+    }
   };
 
   const getRoomColor = (type: string) => {

@@ -121,12 +121,48 @@ export const mockBimData: BimBuilding = {
           { id: 'camera_corridor_01', type: 'camera', position: { x: 10, y: 8, z: 2.8 }, model: 'SECURITY_CAM' }
         ]
       }
+    ],
+    [ // 3階（追加）
+      {
+        id: 'room_301',
+        name: '会議室301',
+        type: 'meeting',
+        floor: 3,
+        coordinates: { x: 16, y: 0, width: 6, height: 4 },
+        walls: [
+          { start: { x: 16, y: 0 }, end: { x: 22, y: 0 }, thickness: 0.2 },
+          { start: { x: 22, y: 0 }, end: { x: 22, y: 4 }, thickness: 0.2 },
+          { start: { x: 22, y: 4 }, end: { x: 16, y: 4 }, thickness: 0.2, hasWindow: true },
+          { start: { x: 16, y: 4 }, end: { x: 16, y: 0 }, thickness: 0.2, hasDoor: true }
+        ],
+        equipment: [
+          { id: 'sensor_301_01', type: 'sensor', position: { x: 19, y: 2, z: 2.5 }, model: 'ENV_MULTI_01' },
+          { id: 'light_301_01', type: 'lighting', position: { x: 18, y: 1.5, z: 2.8 }, model: 'LED_PNL_40W' }
+        ]
+      },
+      {
+        id: 'room_302',
+        name: '事務室302',
+        type: 'office',
+        floor: 3,
+        coordinates: { x: 16, y: 4, width: 6, height: 4 },
+        walls: [
+          { start: { x: 16, y: 4 }, end: { x: 22, y: 4 }, thickness: 0.2 },
+          { start: { x: 22, y: 4 }, end: { x: 22, y: 8 }, thickness: 0.2 },
+          { start: { x: 22, y: 8 }, end: { x: 16, y: 8 }, thickness: 0.2, hasWindow: true },
+          { start: { x: 16, y: 8 }, end: { x: 16, y: 4 }, thickness: 0.2, hasDoor: true }
+        ],
+        equipment: [
+          { id: 'sensor_302_01', type: 'sensor', position: { x: 19, y: 6, z: 2.5 }, model: 'TEMP_ONLY_01' },
+          { id: 'light_302_01', type: 'lighting', position: { x: 18, y: 5.5, z: 2.8 }, model: 'LED_DL_20W' }
+        ]
+      }
     ]
   ],
   metadata: {
-    totalFloors: 2,
+    totalFloors: 3,
     floorHeight: 3.0,
-    buildingWidth: 14,
+    buildingWidth: 22,
     buildingDepth: 8
   }
 };

@@ -248,7 +248,7 @@ function App() {
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* 3D Digital Twin */}
-            <BimDigitalTwin selectedRoomId={selectedRoomId} />
+            <BimDigitalTwin selectedRoomId={selectedRoomId} selectedEquipmentId={selectedEquipmentId} />
             
             {/* Equipment Cards */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 3 }}>
@@ -258,12 +258,20 @@ function App() {
               const equipmentColor = getEquipmentColor(eq.component_type_id);
               
               return (
-                <Card key={eq.point_id} sx={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                <Card 
+                  key={eq.point_id} 
+                  onClick={() => setSelectedEquipmentId(selectedEquipmentId === eq.point_id ? null : eq.point_id)}
+                  sx={{
+                  background: selectedEquipmentId === eq.point_id 
+                    ? `linear-gradient(135deg, ${equipmentColor}30, ${equipmentColor}10)`
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    border: selectedEquipmentId === eq.point_id 
+                      ? `2px solid ${equipmentColor}` 
+                      : '1px solid rgba(255,255,255,0.1)',
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
+                    cursor: 'pointer',
                     '&:hover': {
                       transform: 'translateY(-8px)',
                       boxShadow: `0 20px 40px rgba(${equipmentColor.slice(1).match(/.{2}/g)?.map(x => parseInt(x, 16)).join(',')}, 0.3)`,
@@ -291,7 +299,8 @@ function App() {
                         </Box>
                         <IconButton
                           size="small"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedEquipmentId(eq.point_id);
                             setChartDialogOpen(true);
                           }}
