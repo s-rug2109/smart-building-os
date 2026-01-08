@@ -5,6 +5,11 @@ export interface TopologyItem {
   entity_name: string;      // Display name
   component_type_id: string; // Equipment type (Space, Level, Equipment...)
   parent_id?: string;       // Parent UUID (for hierarchy)
+  properties?: {            // TwinMaker properties
+    level?: string | number; // Floor level information
+    [key: string]: any;     // Other properties
+  };
+  level?: string | number;  // Direct level property (fallback)
 }
 
 // Dynamic data (API / WebSocket response)

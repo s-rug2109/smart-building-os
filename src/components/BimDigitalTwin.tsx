@@ -42,7 +42,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [cameraPosition, setCameraPosition] = useState({ x: 20, y: 25, z: 20 });
+  const [cameraPosition, setCameraPosition] = useState({ x: 25, y: 35, z: 25 });
   
   const { topology } = useStore();
 
@@ -67,7 +67,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
       1000
     );
     camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-    camera.lookAt(7, 0, 4);
+    camera.lookAt(11, 5, 4);
     cameraRef.current = camera;
 
     // Renderer setup
@@ -130,7 +130,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
       spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
       
       camera.position.setFromSpherical(spherical);
-      camera.lookAt(7, 0, 4);
+      camera.lookAt(11, 5, 4);
       
       // Save camera position
       setCameraPosition({ x: camera.position.x, y: camera.position.y, z: camera.position.z });
@@ -150,7 +150,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
       spherical.radius = Math.max(5, Math.min(100, spherical.radius));
       
       camera.position.setFromSpherical(spherical);
-      camera.lookAt(7, 0, 4);
+      camera.lookAt(11, 5, 4);
       
       // Save camera position
       setCameraPosition({ x: camera.position.x, y: camera.position.y, z: camera.position.z });
@@ -254,14 +254,16 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
     // Create mapping between TwinMaker and BIM data
     const mapping = mapTwinMakerToBim(topology);
     
-    // Create all rooms from BIM data (all floors)
-    const allRooms = mockBimData.floors.flat();
-    allRooms.forEach(room => {
-      createBimRoom(scene, room, mapping);
+    // Create all rooms from all floors
+    mockBimData.floors.forEach((floor, floorIndex) => {
+      const floorHeight = floorIndex * mockBimData.metadata.floorHeight;
+      floor.forEach(room => {
+        createBimRoom(scene, room, mapping, floorHeight);
+      });
     });
   };
 
-  const createBimRoom = (scene: THREE.Scene, room: BimRoom, mapping: { [key: string]: string }) => {
+  const createBimRoom = (scene: THREE.Scene, room: BimRoom, mapping: { [key: string]: string }, floorHeight: number = 0) => {
     // Find corresponding TwinMaker room
     const twinMakerRoomId = Object.keys(mapping).find(key => mapping[key] === room.id);
     const isSelected = selectedRoomId === twinMakerRoomId;
@@ -277,7 +279,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(
       room.coordinates.x + room.coordinates.width / 2,
-      0.01,
+      floorHeight + 0.01,
       room.coordinates.y + room.coordinates.height / 2
     );
     floor.receiveShadow = true;
@@ -285,7 +287,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
 
     // Room walls
     room.walls.forEach(wall => {
-      createWall(scene, wall, room, isSelected);
+      createWall(scene, wall, room, isSelected, floorHeight);
     });
 
     // Room label
@@ -303,7 +305,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
     const label = new THREE.Sprite(labelMaterial);
     label.position.set(
       room.coordinates.x + room.coordinates.width / 2,
-      3.5,
+      floorHeight + 3.5,
       room.coordinates.y + room.coordinates.height / 2
     );
     label.scale.set(3, 0.75, 1);
@@ -311,11 +313,11 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
 
     // Equipment from BIM data
     room.equipment.forEach(equipment => {
-      createBimEquipment(scene, equipment, room);
+      createBimEquipment(scene, equipment, room, floorHeight);
     });
   };
 
-  const createWall = (scene: THREE.Scene, wall: any, room: BimRoom, isSelected: boolean) => {
+  const createWall = (scene: THREE.Scene, wall: any, room: BimRoom, isSelected: boolean, floorHeight: number = 0) => {
     const length = Math.sqrt(
       Math.pow(wall.end.x - wall.start.x, 2) + 
       Math.pow(wall.end.y - wall.start.y, 2)
@@ -330,7 +332,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
     const centerX = room.coordinates.x + (wall.start.x + wall.end.x) / 2;
     const centerY = room.coordinates.y + (wall.start.y + wall.end.y) / 2;
     
-    wallMesh.position.set(centerX, 1.5, centerY);
+    wallMesh.position.set(centerX, floorHeight + 1.5, centerY);
     
     // Rotate wall based on direction
     const angle = Math.atan2(wall.end.y - wall.start.y, wall.end.x - wall.start.x);
@@ -350,7 +352,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
       });
       const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
       windowMesh.position.copy(wallMesh.position);
-      windowMesh.position.y = 2;
+      windowMesh.position.y = floorHeight + 2;
       windowMesh.rotation.copy(wallMesh.rotation);
       scene.add(windowMesh);
     }
@@ -361,13 +363,13 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
       const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
       const doorMesh = new THREE.Mesh(doorGeometry, doorMaterial);
       doorMesh.position.copy(wallMesh.position);
-      doorMesh.position.y = 1.05;
+      doorMesh.position.y = floorHeight + 1.05;
       doorMesh.rotation.copy(wallMesh.rotation);
       scene.add(doorMesh);
     }
   };
 
-  const createBimEquipment = (scene: THREE.Scene, equipment: any, room: BimRoom) => {
+  const createBimEquipment = (scene: THREE.Scene, equipment: any, room: BimRoom, floorHeight: number = 0) => {
     let geometry: THREE.BufferGeometry;
     let color = 0x888888;
     
@@ -406,7 +408,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
     
     mesh.position.set(
       room.coordinates.x + equipment.position.x,
-      equipment.position.z,
+      floorHeight + equipment.position.z,
       room.coordinates.y + equipment.position.y
     );
     
@@ -459,7 +461,7 @@ export default function BimDigitalTwin({ selectedRoomId, selectedEquipmentId }: 
               BIM Digital Twin
             </Typography>
             <Chip 
-              label="2F Floor Plan" 
+              label="All Floors" 
               size="small" 
               sx={{ bgcolor: '#00e676', color: 'black', fontSize: '0.7rem', fontWeight: 600 }}
             />

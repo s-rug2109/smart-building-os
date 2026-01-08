@@ -10,7 +10,7 @@ import {
 import TimeSeriesChart from './components/TimeSeriesChart';
 import AlertPanel from './components/AlertPanel';
 import DevStatusDashboard from './components/DevStatusDashboard';
-import BimDigitalTwin from './components/BimDigitalTwin';
+import Simple3DViewer from './components/Simple3DViewer';
 
 function App() {
   const { 
@@ -248,7 +248,7 @@ function App() {
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* 3D Digital Twin */}
-            <BimDigitalTwin selectedRoomId={selectedRoomId} selectedEquipmentId={selectedEquipmentId} />
+            <Simple3DViewer selectedRoomId={selectedRoomId} />
             
             {/* Equipment Cards */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 3 }}>

@@ -18,7 +18,15 @@ export default function DigitalTwin3D({ selectedRoomId }: DigitalTwin3DProps) {
   const { topology, values } = useStore();
 
   useEffect(() => {
-    if (!mountRef.current || topology.length === 0) return;
+    if (!mountRef.current) return;
+
+    // Wait for topology to load
+    if (topology.length === 0) {
+      console.log('Waiting for topology data...');
+      return;
+    }
+
+    console.log('Initializing 3D scene with topology:', topology.length, 'items');
 
     // Clear existing scene
     if (sceneRef.current) {
