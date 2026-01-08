@@ -17,7 +17,6 @@ export default function Simple3DViewer({ selectedRoomId }: Simple3DViewerProps) 
 
     console.log('=== 3D Viewer Debug Info ===');
     console.log('Topology length:', topology.length);
-    console.log('Environment:', process.env.NODE_ENV);
     console.log('Full topology:', topology);
     
     // Extract rooms first
@@ -29,10 +28,10 @@ export default function Simple3DViewer({ selectedRoomId }: Simple3DViewerProps) 
       console.log('No rooms found - using fallback data');
       // Fallback: create mock rooms if no data
       const mockRooms = [
-        { point_id: 'room-101', entity_name: 'Room 101', component_type_id: 'Space' },
-        { point_id: 'room-102', entity_name: 'Room 102', component_type_id: 'Space' },
-        { point_id: 'room-201', entity_name: 'Room 201', component_type_id: 'Space' },
-        { point_id: 'room-202', entity_name: 'Room 202', component_type_id: 'Space' }
+        { point_id: 'room-101', entity_id: 'room-101', entity_name: 'Room 101', component_type_id: 'Space', parent_id: null },
+        { point_id: 'room-102', entity_id: 'room-102', entity_name: 'Room 102', component_type_id: 'Space', parent_id: null },
+        { point_id: 'room-201', entity_id: 'room-201', entity_name: 'Room 201', component_type_id: 'Space', parent_id: null },
+        { point_id: 'room-202', entity_id: 'room-202', entity_name: 'Room 202', component_type_id: 'Space', parent_id: null }
       ];
       rooms.push(...mockRooms);
       console.log('Using mock rooms:', rooms.length);
