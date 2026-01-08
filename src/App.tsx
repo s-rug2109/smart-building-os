@@ -32,8 +32,16 @@ function App() {
     connectWebSocket();
   }, []);
 
-  // Sidebar: Extract 'Space' (rooms) only
+  // Sidebar: Extract 'Space' (rooms) only - with fallback for empty topology
   const rooms = topology.filter(t => t.component_type_id === 'Space');
+  
+  // Add fallback rooms if no topology data is available
+  const displayRooms = rooms.length > 0 ? rooms : [
+    { point_id: 'fallback-101', entity_id: 'fallback-101', entity_name: '事務室101', component_type_id: 'Space', parent_id: undefined },
+    { point_id: 'fallback-102', entity_id: 'fallback-102', entity_name: '会議室102', component_type_id: 'Space', parent_id: undefined },
+    { point_id: 'fallback-201', entity_id: 'fallback-201', entity_name: '事務室201', component_type_id: 'Space', parent_id: undefined },
+    { point_id: 'fallback-202', entity_id: 'fallback-202', entity_name: '会議室202', component_type_id: 'Space', parent_id: undefined }
+  ];
 
   // Main area: Extract entities that have the selected room as parent
   const equipmentsInRoom = topology.filter(t => t.parent_id === selectedRoomId);
@@ -173,7 +181,7 @@ function App() {
             Room Selection
           </Typography>
           <List sx={{ gap: 1 }}>
-            {rooms.length === 0 && (
+            {displayRooms.length === 0 && (
               <Paper sx={{ 
                 p: 2, 
                 background: 'rgba(255,255,255,0.05)',
@@ -183,7 +191,7 @@ function App() {
                 <LinearProgress sx={{ mt: 1, bgcolor: 'rgba(255,255,255,0.1)' }} />
               </Paper>
             )}
-            {rooms.map((room) => (
+            {displayRooms.map((room) => (
               <ListItemButton 
                 key={room.point_id} 
                 selected={selectedRoomId === room.point_id}
@@ -237,7 +245,7 @@ function App() {
                 mb: 1
               }}
             >
-              {rooms.find(r => r.point_id === selectedRoomId)?.entity_name || 'Select a Room'}
+              {displayRooms.find(r => r.point_id === selectedRoomId)?.entity_name || 'Select a Room'}
             </Typography>
             {selectedRoomId && (
               <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)' }}>
