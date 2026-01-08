@@ -132,7 +132,7 @@ export default function Simple3DViewer({ selectedRoomId }: Simple3DViewerProps) 
     }
     
     // Position rooms based on room number (not level property)
-    rooms.forEach((room, index) => {
+    rooms.forEach((room) => {
       // Extract floor from room name (101-106=1F, 201-205=2F, 301-304=3F)
       const roomNumber = room.entity_name.match(/\d{3}/);
       let floor = 1; // Default to 2F (index 1)
